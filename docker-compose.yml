@@ -1,0 +1,20 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    container_name: cart_api
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app  # Monta el código local para hot-reload
+    env_file:
+      - .env    # Variables de entorno locales
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    container_name: cart_redis
+    ports:
+      - "6379:6379"
