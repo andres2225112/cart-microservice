@@ -22,3 +22,10 @@ class CartRepository:
         redis = get_redis()
         cart_key = f"cart:{user_id}"
         return await redis.hgetall(cart_key)
+    
+    async def remove_item(self, user_id: str, product_id: str) -> None:
+        redis = get_redis()
+        cart_key = f"cart:{user_id}"
+
+        await redis.hdel(cart_key, product_id)
+        return None

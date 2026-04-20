@@ -39,3 +39,14 @@ class CartService:
             "items": items,
             "total_items": total_items
         }
+    
+    async def remove_item(self, user_id: str, product_id: str) -> dict:
+        if not product_id or not product_id.strip():
+            raise ValueError("El product_id no puede estar vacío")
+
+        await cart_repository.remove_item(user_id, product_id)
+
+        return {
+            "user_id": user_id,
+            "product_id": product_id
+        }
