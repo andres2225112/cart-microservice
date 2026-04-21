@@ -41,3 +41,18 @@ async def delete_item(user_id: str, item_id: str):
         raise HTTPException(status_code=422, detail=str(e))
     except Exception:
         raise HTTPException(status_code=500, detail="Error interno del servidor")
+
+
+class UpdateItemRequest(BaseModel):
+    quantity: int
+
+
+@router.put("/{user_id}/items/{item_id}")
+async def update_item(user_id: str, item_id: str, body: UpdateItemRequest):
+    try:
+        result = await cart_service.update_item(user_id, item_id, body.quantity)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=500, detail="Error interno del servidor")

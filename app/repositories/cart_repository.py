@@ -29,3 +29,11 @@ class CartRepository:
 
         await redis.hdel(cart_key, product_id)
         return None
+
+    async def update_item_quantity(self, user_id: str, product_id: str, quantity: int) -> None:
+        redis = get_redis()
+        cart_key = f"cart:{user_id}"
+
+        await redis.hset(cart_key, product_id, str(quantity))
+        await redis.expire(cart_key, CART_TTL_SECONDS)
+        return None

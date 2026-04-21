@@ -50,3 +50,17 @@ class CartService:
             "user_id": user_id,
             "product_id": product_id
         }
+
+    async def update_item(self, user_id: str, product_id: str, quantity: int) -> dict:
+        if quantity <= 0:
+            raise ValueError("La cantidad debe ser mayor a 0")
+        if not product_id or not product_id.strip():
+            raise ValueError("El product_id no puede estar vacío")
+
+        await cart_repository.update_item_quantity(user_id, product_id, quantity)
+
+        return {
+            "user_id": user_id,
+            "product_id": product_id,
+            "quantity": quantity
+        }
