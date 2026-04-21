@@ -70,5 +70,6 @@ class CartService:
         await cart_repository.clear_cart(user_id)
 
         return {
-            "user_id": user_id
+            "user_id": user_id,
+            "message": "Carrito eliminado exitosamente"
         }
