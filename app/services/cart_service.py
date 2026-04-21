@@ -2,6 +2,7 @@ from app.repositories.cart_repository import CartRepository
 
 cart_repository = CartRepository()
 
+
 class CartService:
 
     async def add_item(self, user_id: str, product_id: str, quantity: int) -> dict:
@@ -39,7 +40,7 @@ class CartService:
             "items": items,
             "total_items": total_items
         }
-    
+
     async def remove_item(self, user_id: str, product_id: str) -> dict:
         if not product_id or not product_id.strip():
             raise ValueError("El product_id no puede estar vacío")
@@ -63,4 +64,11 @@ class CartService:
             "user_id": user_id,
             "product_id": product_id,
             "quantity": quantity
+        }
+
+    async def clear_cart(self, user_id: str) -> dict:
+        await cart_repository.clear_cart(user_id)
+
+        return {
+            "user_id": user_id
         }
