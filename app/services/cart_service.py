@@ -4,6 +4,7 @@ from app.logger import get_logger
 logger = get_logger(__name__)
 cart_repository = CartRepository()
 
+
 class CartService:
 
     async def add_item(self, user_id: str, product_id: str, quantity: int) -> dict:
@@ -57,12 +58,15 @@ class CartService:
             if not isinstance(e, (ValueError, LookupError)):
                 logger.error(f'unexpected error in get_cart: user={user_id} err={str(e)}')
             raise
-    
     async def remove_item(self, user_id: str, product_id: str) -> dict:
         try:
             if not product_id or not product_id.strip():
                 logger.warning(f'remove_item rejected: empty product_id for user={user_id}')
                 raise ValueError("El product_id no puede estar vacío")
+
+            exists = await cart_repository.item_exists(user_id, product_id)
+            if not exists:
+                raise LookupError(f"Producto {product_id} no encontrado en el carrito")
 
             await cart_repository.remove_item(user_id, product_id)
             
@@ -77,6 +81,10 @@ class CartService:
                 logger.error(f'unexpected error in remove_item: user={user_id} err={str(e)}')
             raise
 
+
+
+
+
     async def update_item(self, user_id: str, product_id: str, quantity: int) -> dict:
         try:
             if quantity <= 0:
@@ -85,6 +93,10 @@ class CartService:
             if not product_id or not product_id.strip():
                 logger.warning(f'update_item rejected: empty product_id for user={user_id}')
                 raise ValueError("El product_id no puede estar vacío")
+
+            exists = await cart_repository.item_exists(user_id, product_id)
+            if not exists:
+                raise LookupError(f"Producto {product_id} no encontrado en el carrito")
 
             await cart_repository.update_item_quantity(user_id, product_id, quantity)
             
@@ -98,4 +110,21 @@ class CartService:
         except Exception as e:
             if not isinstance(e, (ValueError, LookupError)):
                 logger.error(f'unexpected error in update_item: user={user_id} err={str(e)}')
+            raise
+
+
+
+
+
+    async def clear_cart(self, user_id: str) -> dict:
+        try:
+            await cart_repository.clear_cart(user_id)
+            logger.info(f'clear_cart ok: user={user_id}')
+            return {
+                "user_id": user_id,
+                "message": "Carrito eliminado exitosamente"
+            }
+        except Exception as e:
+            if not isinstance(e, (ValueError, LookupError)):
+                logger.error(f'unexpected error in clear_cart: user={user_id} err={str(e)}')
             raise
