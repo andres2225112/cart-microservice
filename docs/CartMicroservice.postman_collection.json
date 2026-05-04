@@ -1,0 +1,245 @@
+{
+  "info": {
+    "_postman_id": "248bf500-3526-4cd1-ad59-348251dc63f8",
+    "name": "Cart Microservice",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "49531984",
+    "_collection_link": "https://go.postman.co/collection/49531984-248bf500-3526-4cd1-ad59-348251dc63f8?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Add Item",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"product_id\": \"producto_101\",\r\n  \"quantity\": 2\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/cart/user_123/items",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "cart",
+            "user_123",
+            "items"
+          ]
+        },
+        "description": "Agrega un producto al carrito o actualiza su cantidad si ya existe"
+      },
+      "response": []
+    },
+    {
+      "name": "Cart",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/cart/user_123",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "cart",
+            "user_123"
+          ]
+        },
+        "description": "Obtiene el contenido del carrito del usuario"
+      },
+      "response": []
+    },
+    {
+      "name": "Update Item",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"quantity\": 5\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/cart/user_123/items/producto_101",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "cart",
+            "user_123",
+            "items",
+            "producto_101"
+          ]
+        },
+        "description": "Actualiza la cantidad de un producto en el carrito.  \nEn Sprint 3 retorna 404 si el producto no existe."
+      },
+      "response": []
+    },
+    {
+      "name": "Item",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/cart/user_123/items/producto_101",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "cart",
+            "user_123",
+            "items",
+            "producto_101"
+          ]
+        },
+        "description": "Elimina un producto del carrito.  \nEn Sprint 3 retorna 404 si el producto no existe."
+      },
+      "response": []
+    },
+    {
+      "name": "Cart (clear)",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/cart/user_123",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "cart",
+            "user_123"
+          ]
+        },
+        "description": "Elimina todos los productos del carrito del usuario"
+      },
+      "response": []
+    },
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "health"
+          ]
+        },
+        "description": "Verifica el estado del microservicio y la conexión a Redis"
+      },
+      "response": []
+    },
+    {
+      "name": "TTL",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/cart/user_123/ttl",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "cart",
+            "user_123",
+            "ttl"
+          ]
+        },
+        "description": "Obtiene el tiempo de vida restante del carrito en Redis"
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000"
+    }
+  ]
+}
