@@ -7,6 +7,7 @@ from app.main import app
 @pytest.mark.asyncio
 async def test_update_item_returns_200_with_valid_quantity():
     with patch("app.services.cart_service.cart_repository") as mock_repo:
+        mock_repo.item_exists = AsyncMock(return_value=True)
         mock_repo.update_item_quantity = AsyncMock(return_value=None)
 
         async with AsyncClient(
