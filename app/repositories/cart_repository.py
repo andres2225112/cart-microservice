@@ -53,3 +53,13 @@ class CartRepository:
     async def item_exists(self, user_id: str, product_id: str) -> bool:
         redis = get_redis()
         return bool(await redis.hexists(f"cart:{user_id}", product_id))
+
+    async def get_ttl(self, user_id: str) -> int:
+        """
+        Consulta el TTL de la clave cart:{user_id} en Redis.
+        Retorna entero positivo (segundos restantes), -1 (sin TTL) o -2 (no existe).
+        El Repository no interpreta el valor: esa responsabilidad es del Service.
+        """
+        redis = get_redis()
+        cart_key = f"cart:{user_id}"
+        return await redis.ttl(cart_key)

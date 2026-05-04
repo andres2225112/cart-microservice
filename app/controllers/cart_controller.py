@@ -22,6 +22,17 @@ async def add_item_to_cart(user_id: str, body: AddItemRequest):
         raise HTTPException(status_code=500, detail="Error interno del servidor")
 
 
+@router.get("/{user_id}/ttl")
+async def get_cart_ttl(user_id: str):
+    try:
+        result = await cart_service.get_ttl(user_id)
+        return result
+    except (ValueError, LookupError):
+        raise  # Capturado por los handlers centralizados de main.py
+    except Exception:
+        raise HTTPException(status_code=500, detail="Error interno del servidor")
+
+
 @router.get("/{user_id}")
 async def get_cart(user_id: str):
     try:

@@ -116,6 +116,42 @@ class CartService:
 
 
 
+    async def get_ttl(self, user_id: str) -> dict:
+        """
+        Retorna el TTL del carrito con interpretación semántica.
+        Casos de Redis: -2 (no existe) -> LookupError.
+                        -1 (sin TTL)   -> respuesta con warning.
+                        > 0            -> respuesta normal con horas calculadas.
+        """
+        try:
+            ttl = await cart_repository.get_ttl(user_id)
+
+            if ttl == -2:
+                logger.info(f'get_ttl: cart not found for user={user_id}')
+                raise LookupError("Carrito no encontrado o expirado")
+
+            if ttl == -1:
+                logger.warning(f'get_ttl: cart has no expiration for user={user_id}')
+                return {
+                    "user_id": user_id,
+                    "ttl_seconds": -1,
+                    "ttl_hours": None,
+                    "warning": "Cart has no expiration set"
+                }
+
+            ttl_hours = round(ttl / 3600, 2)
+            logger.info(f'get_ttl ok: user={user_id} ttl_seconds={ttl}')
+            return {
+                "user_id": user_id,
+                "ttl_seconds": ttl,
+                "ttl_hours": ttl_hours,
+                "warning": None
+            }
+        except Exception as e:
+            if not isinstance(e, (ValueError, LookupError)):
+                logger.error(f'unexpected error in get_ttl: user={user_id} err={str(e)}')
+            raise
+
     async def clear_cart(self, user_id: str) -> dict:
         try:
             await cart_repository.clear_cart(user_id)
