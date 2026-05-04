@@ -45,3 +45,11 @@ class CartRepository:
 
         await redis.delete(cart_key)
         return None
+    
+    async def cart_exists(self, user_id: str) -> bool:
+        redis = get_redis()
+        return bool(await redis.exists(f"cart:{user_id}"))
+
+    async def item_exists(self, user_id: str, product_id: str) -> bool:
+        redis = get_redis()
+        return bool(await redis.hexists(f"cart:{user_id}", product_id))

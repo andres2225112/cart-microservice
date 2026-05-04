@@ -45,6 +45,13 @@ class CartService:
         if not product_id or not product_id.strip():
             raise ValueError("El product_id no puede estar vacío")
 
+        try:
+            exists = await cart_repository.item_exists(user_id, product_id)
+            if exists is False:
+                raise LookupError(f"Producto {product_id} no encontrado en el carrito")
+        except Exception:
+            pass
+
         await cart_repository.remove_item(user_id, product_id)
 
         return {
@@ -52,11 +59,22 @@ class CartService:
             "product_id": product_id
         }
 
+
+
+
+
     async def update_item(self, user_id: str, product_id: str, quantity: int) -> dict:
         if quantity <= 0:
             raise ValueError("La cantidad debe ser mayor a 0")
         if not product_id or not product_id.strip():
             raise ValueError("El product_id no puede estar vacío")
+
+        try:
+            exists = await cart_repository.item_exists(user_id, product_id)
+            if exists is False:
+                raise LookupError(f"Producto {product_id} no encontrado en el carrito")
+        except Exception:
+            pass
 
         await cart_repository.update_item_quantity(user_id, product_id, quantity)
 
@@ -65,6 +83,10 @@ class CartService:
             "product_id": product_id,
             "quantity": quantity
         }
+
+
+
+
 
     async def clear_cart(self, user_id: str) -> dict:
         await cart_repository.clear_cart(user_id)

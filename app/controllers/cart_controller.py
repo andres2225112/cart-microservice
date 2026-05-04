@@ -40,6 +40,8 @@ async def delete_item(user_id: str, item_id: str):
         return result
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception:
         raise HTTPException(status_code=500, detail="Error interno del servidor")
 
@@ -55,8 +57,11 @@ async def update_item(user_id: str, item_id: str, body: UpdateItemRequest):
         return result
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception:
         raise HTTPException(status_code=500, detail="Error interno del servidor")
+
 
 
 @router.delete("/{user_id}")
