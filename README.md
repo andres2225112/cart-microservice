@@ -143,23 +143,59 @@ Acceder a: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ---
 
-## 🧪 Ejecución de Tests
+### Ejecución de Tests y Cobertura
 
-Los tests de integración se ejecutan con **pytest** y utilizan mocks para simular Redis:
+Los tests se ejecutan con **pytest** y validan el correcto funcionamiento de los endpoints y la lógica del microservicio.
+
+### Ejecutar tests básicos
 
 ```bash
+pip install -r requirements.txt
 pytest tests/ -v
 ```
 
-### Tests disponibles:
+---
 
-| Archivo | Descripción |
-|---|---|
-| `test_cart_endpoints.py` | Tests para agregar items (POST) |
-| `test_get_cart.py` | Tests para consultar carrito (GET) |
-| `test_put_item.py` | Tests para actualizar cantidad (PUT) |
-| `test_delete_item.py` | Tests para eliminar item (DELETE) |
-| `test_cart_repository.py` | Tests unitarios del repositorio |
+### Reporte de cobertura en consola
+
+```bash
+pytest tests/ -v --cov=app --cov-report=term-missing
+```
+
+Esto mostrará:
+
+* Porcentaje de cobertura
+* Líneas no cubiertas por tests
+
+---
+
+### Cobertura con umbral (80%) y reporte XML
+
+```bash
+pytest tests/ -v --cov=app --cov-report=term-missing --cov-report=xml --cov-fail-under=80
+```
+
+* Falla si la cobertura es menor al **80%**
+* Genera el archivo:
+
+```text
+coverage.xml
+```
+
+en la raíz del proyecto (usado en integración continua - CI)
+
+---
+
+### Tests incluidos
+
+| Archivo                   | Descripción                          |
+| ------------------------- | ------------------------------------ |
+| `test_cart_endpoints.py`  | Tests para agregar items (POST)      |
+| `test_get_cart.py`        | Tests para consultar carrito (GET)   |
+| `test_put_item.py`        | Tests para actualizar cantidad (PUT) |
+| `test_delete_item.py`     | Tests para eliminar item (DELETE)    |
+| `test_cart_repository.py` | Tests unitarios del repositorio      |
+
 
 ---
 
@@ -169,29 +205,33 @@ Base URL: `http://localhost:8000`
 
 ### 1. Health Check
 
-Verifica que el servicio está activo.
+Verifica que el servicio está activo y la conexión a Redis.
 
-| Campo | Valor |
-|---|---|
-| **Método** | `GET` |
-| **Ruta** | `/health` |
-| **Descripción** | Verifica el estado del microservicio |
+| Campo           | Valor                                        |
+| --------------- | -------------------------------------------- |
+| **Método**      | `GET`                                        |
+| **Ruta**        | `/health`                                    |
+| **Descripción** | Verifica el estado del microservicio y Redis |
 
-**Ejemplo de Request:**
-
-```bash
-GET /health
-```
-
-**Ejemplo de Response** (`200 OK`):
+**Ejemplo de Response (200 OK):**
 
 ```json
 {
-  "status": "ok"
+  "status": "ok",
+  "redis": "ok",
+  "detail": null
 }
 ```
 
----
+**Ejemplo de Response (degradado):**
+
+```json
+{
+  "status": "degraded",
+  "redis": "error",
+  "detail": "Connection refused"
+}
+```
 
 ### 2. Agregar producto al carrito
 
@@ -292,7 +332,46 @@ GET /api/cart/user_123
 
 ---
 
-### 4. Modificar cantidad de un producto
+### 4. Tiempo de vida del carrito (TTL)
+
+Retorna el tiempo restante antes de que el carrito expire.
+
+| Campo           | Valor                                 |
+| --------------- | ------------------------------------- |
+| **Método**      | `GET`                                 |
+| **Ruta**        | `/api/cart/{userId}/ttl`              |
+| **Descripción** | Obtiene el tiempo de vida del carrito |
+
+**Ejemplo de Response (200 OK):**
+
+```json
+{
+  "user_id": "user_123",
+  "ttl_seconds": 82400,
+  "ttl_hours": 22.89,
+  "warning": null
+}
+```
+
+**Sin expiración:**
+
+```json
+{
+  "user_id": "user_123",
+  "ttl_seconds": -1,
+  "ttl_hours": null,
+  "warning": "Cart has no expiration set"
+}
+```
+
+**Errores posibles:**
+
+| Código | Descripción                      |
+| ------ | -------------------------------- |
+| `404`  | Carrito no encontrado o expirado |
+
+
+### 5. Modificar cantidad de un producto
 
 Actualiza la cantidad de un producto existente en el carrito.
 
@@ -344,9 +423,16 @@ Content-Type: application/json
 | `422` | Cantidad inválida (≤ 0) o `product_id` vacío |
 | `500` | Error interno del servidor |
 
+**Nuevo comportamiento (Sprint 3):**
+
+| Código | Descripción                          |
+| ------ | ------------------------------------ |
+| `404`  | Producto no encontrado en el carrito |
+
+
 ---
 
-### 5. Eliminar un producto del carrito
+### 6. Eliminar un producto del carrito
 
 Elimina un producto específico del carrito del usuario.
 
@@ -385,9 +471,16 @@ DELETE /api/cart/user_123/items/producto_101
 | `422` | `product_id` vacío |
 | `500` | Error interno del servidor |
 
+**Nuevo comportamiento (Sprint 3):**
+
+| Código | Descripción                          |
+| ------ | ------------------------------------ |
+| `404`  | Producto no encontrado en el carrito |
+
+
 ---
 
-### 6. Vaciar carrito completo
+### 7. Vaciar carrito completo
 
 Elimina todos los productos del carrito del usuario.
 
@@ -425,6 +518,8 @@ DELETE /api/cart/user_123
 | `500` | Error interno del servidor |
 
 ---
+
+
 
 ## 📦 Colección Postman
 
