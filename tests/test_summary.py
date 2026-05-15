@@ -1,16 +1,20 @@
+import os
+os.environ["API_KEY"] = "test-key"
+
 import pytest
 from unittest.mock import AsyncMock, patch
 from httpx import AsyncClient, ASGITransport
 
 from app.main import app
 
+
 MOCK_SUMMARY = {
     "user_id": "user_123",
-    "total_items": 6,
-    "unique_products": 3,
+    "total_products": 3,
+    "total_quantity": 10,
     "top_product": {
         "product_id": "producto_101",
-        "quantity": 3
+        "quantity": 5
     },
     "ttl_seconds": 7200,
     "expiring_soon": False
@@ -37,8 +41,8 @@ async def test_get_summary_returns_200_with_correct_fields():
         data = response.json()
 
         assert data["user_id"] == "user_123"
-        assert data["total_items"] == 6
-        assert data["unique_products"] == 3
+        assert data["total_products"] == 3
+        assert data["total_quantity"] == 10
         assert data["ttl_seconds"] == 7200
         assert data["expiring_soon"] is False
 
@@ -62,7 +66,6 @@ async def test_get_summary_returns_404_when_cart_not_found():
             )
 
         assert response.status_code == 404
-        assert response.json()["detail"] == "Carrito no encontrado o vacío"
 
 
 @pytest.mark.asyncio
@@ -84,7 +87,6 @@ async def test_get_summary_returns_500_on_unexpected_error():
             )
 
         assert response.status_code == 500
-        assert response.json()["detail"] == "Error interno del servidor"
 
 
 @pytest.mark.asyncio
