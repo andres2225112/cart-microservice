@@ -10,6 +10,17 @@ class CartService:
     async def add_item(self, user_id: str, product_id: str, quantity: int) -> dict:
         """
         Valida los datos y llama al repositorio para guardar el producto.
+
+        Args:
+            user_id: Identificador del usuario propietario del carrito.
+            product_id: Identificador del producto a agregar.
+            quantity: Cantidad del producto (debe ser mayor a 0).
+
+        Returns:
+            Diccionario con user_id, product_id y quantity guardados.
+
+        Raises:
+            ValueError: Si quantity <= 0 o product_id esta vacio.
         """
         try:
             if quantity <= 0:
@@ -17,7 +28,7 @@ class CartService:
                 raise ValueError("La cantidad debe ser mayor a 0")
             if not product_id or not product_id.strip():
                 logger.warning(f'add_item rejected: empty product_id for user={user_id}')
-                raise ValueError("El product_id no puede estar vacío")
+                raise ValueError("El product_id no puede estar vacio")
 
             await cart_repository.add_or_update_item(user_id, product_id, quantity)
 
@@ -35,18 +46,26 @@ class CartService:
 
     async def get_cart(self, user_id: str, page: int = 1, page_size: int = None) -> dict:
         """
-        Retorna el contenido del carrito con soporte de paginación opcional.
-        Si page_size es None, retorna todos los ítems (comportamiento original).
-        Lanza ValueError si el carrito no existe o está vacío.
+        Retorna el contenido del carrito con soporte de paginacion opcional.
+
+        Args:
+            user_id: Identificador del usuario propietario del carrito.
+            page: Numero de pagina (default 1).
+            page_size: Cantidad de items por pagina. Si es None retorna todos.
+
+        Returns:
+            Diccionario con items, totales y datos de paginacion.
+
+        Raises:
+            ValueError: Si el carrito no existe o esta vacio.
         """
         try:
             cart_data = await cart_repository.get_cart(user_id)
 
             if not cart_data:
                 logger.info(f'get_cart: empty or not found for user={user_id}')
-                raise ValueError("Carrito no encontrado o vacío")
+                raise ValueError("Carrito no encontrado o vacio")
 
-            # Convertir todos los ítems
             all_items = {
                 product_id: int(quantity)
                 for product_id, quantity in cart_data.items()
@@ -54,12 +73,11 @@ class CartService:
             total_items = len(all_items)
             total_quantity = sum(all_items.values())
 
-            # Aplicar paginación solo si se solicitó page_size
             if page_size is not None:
                 if page < 1:
-                    raise ValueError("El número de página debe ser mayor a 0")
+                    raise ValueError("El numero de pagina debe ser mayor a 0")
                 if page_size < 1:
-                    raise ValueError("El tamaño de página debe ser mayor a 0")
+                    raise ValueError("El tamano de pagina debe ser mayor a 0")
 
                 items_list = list(all_items.items())
                 start = (page - 1) * page_size
@@ -91,10 +109,24 @@ class CartService:
             raise
 
     async def remove_item(self, user_id: str, product_id: str) -> dict:
+        """
+        Elimina un producto del carrito del usuario.
+
+        Args:
+            user_id: Identificador del usuario propietario del carrito.
+            product_id: Identificador del producto a eliminar.
+
+        Returns:
+            Diccionario de confirmacion con user_id y product_id eliminado.
+
+        Raises:
+            ValueError: Si product_id esta vacio.
+            LookupError: Si el producto no existe en el carrito.
+        """
         try:
             if not product_id or not product_id.strip():
                 logger.warning(f'remove_item rejected: empty product_id for user={user_id}')
-                raise ValueError("El product_id no puede estar vacío")
+                raise ValueError("El product_id no puede estar vacio")
 
             exists = await cart_repository.item_exists(user_id, product_id)
             if not exists:
@@ -114,13 +146,28 @@ class CartService:
             raise
 
     async def update_item(self, user_id: str, product_id: str, quantity: int) -> dict:
+        """
+        Valida los datos y actualiza la cantidad de un producto existente en el carrito.
+
+        Args:
+            user_id: Identificador del usuario propietario del carrito.
+            product_id: Identificador del producto a actualizar.
+            quantity: Nueva cantidad (debe ser mayor a 0).
+
+        Returns:
+            Diccionario con user_id, product_id y quantity actualizados.
+
+        Raises:
+            ValueError: Si quantity <= 0 o product_id esta vacio.
+            LookupError: Si el producto no existe en el carrito.
+        """
         try:
             if quantity <= 0:
                 logger.warning(f'update_item rejected: quantity={quantity} for user={user_id}')
                 raise ValueError("La cantidad debe ser mayor a 0")
             if not product_id or not product_id.strip():
                 logger.warning(f'update_item rejected: empty product_id for user={user_id}')
-                raise ValueError("El product_id no puede estar vacío")
+                raise ValueError("El product_id no puede estar vacio")
 
             exists = await cart_repository.item_exists(user_id, product_id)
             if not exists:
@@ -142,10 +189,16 @@ class CartService:
 
     async def get_ttl(self, user_id: str) -> dict:
         """
-        Retorna el TTL del carrito con interpretación semántica.
-        Casos de Redis: -2 (no existe) -> LookupError.
-                        -1 (sin TTL)   -> respuesta con warning.
-                        > 0            -> respuesta normal con horas calculadas.
+        Retorna el TTL del carrito con interpretacion semantica.
+
+        Args:
+            user_id: Identificador del usuario cuyo TTL se consultara.
+
+        Returns:
+            Diccionario con ttl_seconds, ttl_hours y warning.
+
+        Raises:
+            LookupError: Si el carrito no existe o ya expiro (TTL == -2).
         """
         try:
             ttl = await cart_repository.get_ttl(user_id)
@@ -177,6 +230,15 @@ class CartService:
             raise
 
     async def clear_cart(self, user_id: str) -> dict:
+        """
+        Vacia el carrito completo del usuario.
+
+        Args:
+            user_id: Identificador del usuario cuyo carrito se vaciara.
+
+        Returns:
+            Diccionario de confirmacion con user_id y mensaje.
+        """
         try:
             await cart_repository.clear_cart(user_id)
             logger.info(f'clear_cart ok: user={user_id}')
@@ -191,25 +253,29 @@ class CartService:
 
     async def get_summary(self, user_id: str) -> dict:
         """
-        Retorna un resumen estadístico del carrito del usuario.
-        Incluye: número de productos distintos, cantidad total de unidades,
-        el producto con más unidades, y si el carrito está próximo a expirar.
-        Lanza LookupError si el carrito no existe.
+        Retorna un resumen estadistico del carrito del usuario.
+
+        Args:
+            user_id: Identificador del usuario cuyo resumen se consultara.
+
+        Returns:
+            Diccionario con distinct_products, total_units, top_product,
+            ttl_seconds y expiring_soon.
+
+        Raises:
+            LookupError: Si el carrito no existe o esta vacio.
         """
         try:
             cart_data = await cart_repository.get_cart(user_id)
             if not cart_data:
-                raise LookupError("Carrito no encontrado o vacío")
+                raise LookupError("Carrito no encontrado o vacio")
 
             items = {pid: int(qty) for pid, qty in cart_data.items()}
             distinct_products = len(items)
             total_units = sum(items.values())
 
-            # Producto con más unidades
             top_product = max(items, key=lambda k: items[k])
             top_product_quantity = items[top_product]
-
-            # Obtener TTL y calcular si está próximo a expirar (< 1 hora = 3600 seg)
             ttl_seconds = await cart_repository.get_ttl(user_id)
             expiring_soon = (0 < ttl_seconds < 3600)
 
