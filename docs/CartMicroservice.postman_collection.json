@@ -210,8 +210,77 @@
         "description": "Obtiene el tiempo de vida restante del carrito en Redis"
       },
       "response": []
+    },
+    {
+      "name": "Summary",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/cart/user_123/summary",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "cart",
+            "user_123",
+            "summary"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Cart Paginated",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/cart/user_123?page=1&page_size=2",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "cart",
+            "user_123"
+          ],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "page_size",
+              "value": "2"
+            }
+          ]
+        }
+      },
+      "response": []
     }
   ],
+ "auth": {
+  "type": "apikey",
+  "apikey": [
+    {
+      "key": "value",
+      "value": "{{api_key}}",
+      "type": "string"
+    },
+    {
+      "key": "key",
+      "value": "X-API-Key",
+      "type": "string"
+    },
+    {
+      "key": "in",
+      "value": "header",
+      "type": "string"
+    }
+  ]
+},
   "event": [
     {
       "listen": "prerequest",
@@ -240,6 +309,10 @@
     {
       "key": "base_url",
       "value": "http://localhost:8000"
+    },
+    {
+  	"key": "api_key",
+  	"value": "dev-secret-key-local"
     }
   ]
 }

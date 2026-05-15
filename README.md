@@ -14,6 +14,7 @@ Microservicio de **carrito de compras** desarrollado con **FastAPI** y **Redis**
 - [Ejecución de Tests](#-ejecución-de-tests)
 - [Endpoints de la API](#-endpoints-de-la-api)
 - [Colección Postman](#-colección-postman)
+- [Autenticación](#-autenticación)
 
 ---
 
@@ -201,6 +202,12 @@ en la raíz del proyecto (usado en integración continua - CI)
 
 ## 📡 Endpoints de la API
 
+> Todos los endpoints protegidos requieren la cabecera:
+>
+> ```http
+> X-API-Key: {{api_key}}
+> ```
+
 Base URL: `http://localhost:8000`
 
 ### 1. Health Check
@@ -332,7 +339,41 @@ GET /api/cart/user_123
 
 ---
 
-### 4. Tiempo de vida del carrito (TTL)
+### 4. Paginación del carrito
+
+El endpoint GET del carrito soporta paginación opcional.
+
+**Parámetros de query:**
+
+| Parámetro | Tipo | Descripción |
+|---|---|---|
+| `page` | `integer` | Número de página (default: 1) |
+| `page_size` | `integer` | Cantidad de items por página |
+
+**Ejemplo de Request:**
+
+```bash
+GET /api/cart/user_123?page=1&page_size=2
+```
+
+**Ejemplo de Response (200 OK):**
+
+```json
+{
+  "user_id": "user_123",
+  "items": {
+    "prod_001": 2,
+    "prod_002": 1
+  },
+  "total_items": 10,
+  "total_quantity": 25,
+  "page": 1,
+  "page_size": 2,
+  "total_pages": 5
+}
+```
+
+### 5. Tiempo de vida del carrito (TTL)
 
 Retorna el tiempo restante antes de que el carrito expire.
 
@@ -371,7 +412,7 @@ Retorna el tiempo restante antes de que el carrito expire.
 | `404`  | Carrito no encontrado o expirado |
 
 
-### 5. Modificar cantidad de un producto
+### 6. Modificar cantidad de un producto
 
 Actualiza la cantidad de un producto existente en el carrito.
 
@@ -432,7 +473,7 @@ Content-Type: application/json
 
 ---
 
-### 6. Eliminar un producto del carrito
+### 7. Eliminar un producto del carrito
 
 Elimina un producto específico del carrito del usuario.
 
@@ -480,7 +521,7 @@ DELETE /api/cart/user_123/items/producto_101
 
 ---
 
-### 7. Vaciar carrito completo
+### 8. Vaciar carrito completo
 
 Elimina todos los productos del carrito del usuario.
 
@@ -517,6 +558,45 @@ DELETE /api/cart/user_123
 |---|---|
 | `500` | Error interno del servidor |
 
+
+### 9. Resumen estadístico del carrito
+
+Retorna un resumen completo con métricas del carrito del usuario.
+
+| Campo | Valor |
+|---|---|
+| **Método** | `GET` |
+| **Ruta** | `/api/cart/{userId}/summary` |
+| **Descripción** | Obtiene estadísticas del carrito |
+
+**Ejemplo de Request:**
+
+```bash
+GET /api/cart/user_123/summary
+```
+
+**Ejemplo de Response (200 OK):**
+
+```json
+{
+  "user_id": "user_123",
+  "distinct_products": 3,
+  "total_units": 10,
+  "top_product": {
+    "product_id": "prod_001",
+    "quantity": 5
+  },
+  "ttl_seconds": 82400,
+  "expiring_soon": false
+}
+```
+
+**Errores posibles:**
+
+| Código | Descripción |
+|---|---|
+| `404` | Carrito no encontrado o vacío |
+
 ---
 
 
@@ -536,15 +616,35 @@ Se incluye una colección de Postman con todos los endpoints preconfigurados:
 
 ---
 
-## 👥 Equipo de Desarrollo — Sprint 2
+## 🔐 Autenticación
+
+Todos los endpoints (excepto `/health`) requieren la cabecera HTTP `X-API-Key`:
+
+```bash
+curl -H "X-API-Key: tu-clave-api" http://localhost:8000/api/cart/user_123
+```
+La clave se configura con la variable de entorno `API_KEY` en el archivo `.env`
+(local) o en Railway (producción).
+
+Sin la cabecera o con una clave incorrecta, la respuesta es:
+
+```json
+{
+  "detail": "Invalid or missing API Key"
+}
+```
+
+---
+
+## 👥 Equipo de Desarrollo — Sprint 4
 
 | Integrante | Responsabilidad |
 |---|---|
-| Angerson Steven | Endpoint PUT (modificar cantidad) |
-| Andrés Martínez | Tests para endpoint PUT |
-| Luige Alejandro | Endpoint DELETE item |
-| Alex Sandoval | Tests para endpoint DELETE item |
-| Cristian Eduardo | Endpoint DELETE carrito (vaciar carrito) |
-| Johan Sebastián | Tests para endpoint DELETE carrito |
-| Arley Eduardo | Colección Postman |
-| Luis Santiago Tarazona | Documentación README |
+| Angerson Steven | Endpoint /summary completo |
+| Andrés Martínez | Autenticación API Key + coordinación |
+| Luige Alejandro | Paginación GET cart |
+| Alex Sandoval | Tests /summary |
+| Cristian Eduardo | Validación user_id + HTTP 400 |
+| Johan Sebastián | Hardening CI: flake8 + Actions Summary |
+| Arley Eduardo | README final + Postman |
+| Luis Santiago Tarazona | Docstrings completos |
