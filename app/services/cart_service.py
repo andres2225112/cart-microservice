@@ -188,3 +188,47 @@ class CartService:
             if not isinstance(e, (ValueError, LookupError)):
                 logger.error(f'unexpected error in clear_cart: user={user_id} err={str(e)}')
             raise
+
+    async def get_summary(self, user_id: str) -> dict:
+        """
+        Retorna un resumen estadístico del carrito del usuario.
+        Incluye: número de productos distintos, cantidad total de unidades,
+        el producto con más unidades, y si el carrito está próximo a expirar.
+        Lanza LookupError si el carrito no existe.
+        """
+        try:
+            cart_data = await cart_repository.get_cart(user_id)
+            if not cart_data:
+                raise LookupError("Carrito no encontrado o vacío")
+
+            items = {pid: int(qty) for pid, qty in cart_data.items()}
+            distinct_products = len(items)
+            total_units = sum(items.values())
+
+            # Producto con más unidades
+            top_product = max(items, key=lambda k: items[k])
+            top_product_quantity = items[top_product]
+
+            # Obtener TTL y calcular si está próximo a expirar (< 1 hora = 3600 seg)
+            ttl_seconds = await cart_repository.get_ttl(user_id)
+            expiring_soon = (0 < ttl_seconds < 3600)
+
+            logger.info(
+                f'get_summary ok: user={user_id} products={distinct_products} '
+                f'units={total_units}'
+            )
+            return {
+                "user_id": user_id,
+                "distinct_products": distinct_products,
+                "total_units": total_units,
+                "top_product": {
+                    "product_id": top_product,
+                    "quantity": top_product_quantity
+                },
+                "ttl_seconds": ttl_seconds,
+                "expiring_soon": expiring_soon
+            }
+        except Exception as e:
+            if not isinstance(e, (ValueError, LookupError)):
+                logger.error(f'unexpected error in get_summary: user={user_id} err={str(e)}')
+            raise
