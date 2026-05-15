@@ -42,10 +42,9 @@ class CartRepository:
     async def clear_cart(self, user_id: str) -> None:
         redis = get_redis()
         cart_key = f"cart:{user_id}"
-
         await redis.delete(cart_key)
         return None
-    
+
     async def cart_exists(self, user_id: str) -> bool:
         redis = get_redis()
         return bool(await redis.exists(f"cart:{user_id}"))

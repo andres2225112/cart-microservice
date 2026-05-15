@@ -17,13 +17,13 @@ async def verify_api_key(api_key: str = Security(api_key_header)) -> str:
     """
     expected_key = os.getenv("API_KEY")
     if not expected_key:
-        logger.warning("API_KEY env var not set — all requests will be rejected")
+        logger.warning("API_KEY env var not set - all requests will be rejected")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="API Key not configured on server"
         )
     if api_key != expected_key:
-        logger.warning(f"Unauthorized request — invalid or missing API Key")
+        logger.warning("Unauthorized request - invalid or missing API Key")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or missing API Key"

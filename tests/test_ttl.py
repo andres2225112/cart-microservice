@@ -5,7 +5,8 @@ from app.main import app
 
 
 @pytest.mark.asyncio
-async def test_get_ttl_returns_200_with_active_ttl():
+async def test_get_ttl_returns_200_with_active_ttl(monkeypatch):
+    monkeypatch.setenv("API_KEY", "test-key")
     mock_result = {
         "user_id": "user_123",
         "ttl_seconds": 82400,
@@ -20,7 +21,10 @@ async def test_get_ttl_returns_200_with_active_ttl():
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            response = await client.get("/api/cart/user_123/ttl")
+            response = await client.get(
+                "/api/cart/user_123/ttl",
+                headers={"X-API-Key": "test-key"}
+            )
 
     assert response.status_code == 200
     data = response.json()
@@ -31,7 +35,8 @@ async def test_get_ttl_returns_200_with_active_ttl():
 
 
 @pytest.mark.asyncio
-async def test_get_ttl_returns_200_with_warning_when_no_ttl_set():
+async def test_get_ttl_returns_200_with_warning_when_no_ttl_set(monkeypatch):
+    monkeypatch.setenv("API_KEY", "test-key")
     mock_result = {
         "user_id": "user_123",
         "ttl_seconds": -1,
@@ -46,7 +51,10 @@ async def test_get_ttl_returns_200_with_warning_when_no_ttl_set():
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            response = await client.get("/api/cart/user_123/ttl")
+            response = await client.get(
+                "/api/cart/user_123/ttl",
+                headers={"X-API-Key": "test-key"}
+            )
 
     assert response.status_code == 200
     data = response.json()
@@ -56,7 +64,8 @@ async def test_get_ttl_returns_200_with_warning_when_no_ttl_set():
 
 
 @pytest.mark.asyncio
-async def test_get_ttl_returns_404_when_cart_not_found():
+async def test_get_ttl_returns_404_when_cart_not_found(monkeypatch):
+    monkeypatch.setenv("API_KEY", "test-key")
     with patch("app.controllers.cart_controller.cart_service") as mock_svc:
         mock_svc.get_ttl = AsyncMock(
             side_effect=LookupError("Carrito no encontrado o expirado")
@@ -66,14 +75,18 @@ async def test_get_ttl_returns_404_when_cart_not_found():
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            response = await client.get("/api/cart/usuario_fantasma/ttl")
+            response = await client.get(
+                "/api/cart/usuario_fantasma/ttl",
+                headers={"X-API-Key": "test-key"}
+            )
 
     assert response.status_code == 404
     assert "detail" in response.json()
 
 
 @pytest.mark.asyncio
-async def test_get_ttl_returns_500_on_unexpected_error():
+async def test_get_ttl_returns_500_on_unexpected_error(monkeypatch):
+    monkeypatch.setenv("API_KEY", "test-key")
     with patch("app.controllers.cart_controller.cart_service") as mock_svc:
         mock_svc.get_ttl = AsyncMock(
             side_effect=Exception("Redis down")
@@ -83,6 +96,9 @@ async def test_get_ttl_returns_500_on_unexpected_error():
             transport=ASGITransport(app=app),
             base_url="http://test",
         ) as client:
-            response = await client.get("/api/cart/user_123/ttl")
+            response = await client.get(
+                "/api/cart/user_123/ttl",
+                headers={"X-API-Key": "test-key"}
+            )
 
     assert response.status_code == 500

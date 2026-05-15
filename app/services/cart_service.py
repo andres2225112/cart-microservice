@@ -20,7 +20,7 @@ class CartService:
                 raise ValueError("El product_id no puede estar vacío")
 
             await cart_repository.add_or_update_item(user_id, product_id, quantity)
-            
+
             logger.info(f'add_item ok: user={user_id} product={product_id} qty={quantity}')
 
             return {
@@ -89,6 +89,7 @@ class CartService:
             if not isinstance(e, (ValueError, LookupError)):
                 logger.error(f'unexpected error in get_cart: user={user_id} err={str(e)}')
             raise
+
     async def remove_item(self, user_id: str, product_id: str) -> dict:
         try:
             if not product_id or not product_id.strip():
@@ -100,7 +101,7 @@ class CartService:
                 raise LookupError(f"Producto {product_id} no encontrado en el carrito")
 
             await cart_repository.remove_item(user_id, product_id)
-            
+
             logger.info(f'remove_item ok: user={user_id} product={product_id}')
 
             return {
@@ -111,10 +112,6 @@ class CartService:
             if not isinstance(e, (ValueError, LookupError)):
                 logger.error(f'unexpected error in remove_item: user={user_id} err={str(e)}')
             raise
-
-
-
-
 
     async def update_item(self, user_id: str, product_id: str, quantity: int) -> dict:
         try:
@@ -130,7 +127,7 @@ class CartService:
                 raise LookupError(f"Producto {product_id} no encontrado en el carrito")
 
             await cart_repository.update_item_quantity(user_id, product_id, quantity)
-            
+
             logger.info(f'update_item ok: user={user_id} product={product_id} qty={quantity}')
 
             return {
@@ -142,10 +139,6 @@ class CartService:
             if not isinstance(e, (ValueError, LookupError)):
                 logger.error(f'unexpected error in update_item: user={user_id} err={str(e)}')
             raise
-
-
-
-
 
     async def get_ttl(self, user_id: str) -> dict:
         """

@@ -5,17 +5,22 @@ from app.main import app
 
 
 @pytest.mark.asyncio
-async def test_update_item_returns_200_with_valid_quantity():
-    with patch("app.services.cart_service.cart_repository") as mock_repo:
-        mock_repo.item_exists = AsyncMock(return_value=True)
-        mock_repo.update_item_quantity = AsyncMock(return_value=None)
+async def test_update_item_returns_200_with_valid_quantity(monkeypatch):
+    monkeypatch.setenv("API_KEY", "test-key")
+    with patch("app.controllers.cart_controller.cart_service") as mock_service:
+        mock_service.update_item = AsyncMock(return_value={
+            "user_id": "user_123",
+            "product_id": "producto_101",
+            "quantity": 5
+        })
 
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
             response = await client.put(
                 "/api/cart/user_123/items/producto_101",
-                json={"quantity": 5}
+                json={"quantity": 5},
+                headers={"X-API-Key": "test-key"}
             )
 
         assert response.status_code == 200
@@ -26,32 +31,40 @@ async def test_update_item_returns_200_with_valid_quantity():
 
 
 @pytest.mark.asyncio
-async def test_update_item_returns_422_when_quantity_is_zero():
-    with patch("app.services.cart_service.cart_repository") as mock_repo:
-        mock_repo.add_or_update_item = AsyncMock(return_value=None)
+async def test_update_item_returns_422_when_quantity_is_zero(monkeypatch):
+    monkeypatch.setenv("API_KEY", "test-key")
+    with patch("app.controllers.cart_controller.cart_service") as mock_service:
+        mock_service.update_item = AsyncMock(
+            side_effect=ValueError("La cantidad debe ser mayor a 0")
+        )
 
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
             response = await client.put(
                 "/api/cart/user_123/items/producto_101",
-                json={"quantity": 0}
+                json={"quantity": 0},
+                headers={"X-API-Key": "test-key"}
             )
 
         assert response.status_code == 422
 
 
 @pytest.mark.asyncio
-async def test_update_item_returns_422_when_quantity_is_negative():
-    with patch("app.services.cart_service.cart_repository") as mock_repo:
-        mock_repo.add_or_update_item = AsyncMock(return_value=None)
+async def test_update_item_returns_422_when_quantity_is_negative(monkeypatch):
+    monkeypatch.setenv("API_KEY", "test-key")
+    with patch("app.controllers.cart_controller.cart_service") as mock_service:
+        mock_service.update_item = AsyncMock(
+            side_effect=ValueError("La cantidad debe ser mayor a 0")
+        )
 
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
             response = await client.put(
                 "/api/cart/user_123/items/producto_101",
-                json={"quantity": -3}
+                json={"quantity": -3},
+                headers={"X-API-Key": "test-key"}
             )
 
         assert response.status_code == 422

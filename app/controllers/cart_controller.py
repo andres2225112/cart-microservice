@@ -4,9 +4,11 @@ from pydantic import BaseModel
 from app.services.cart_service import CartService
 from app.security import verify_api_key
 
-router = APIRouter( prefix="/api/cart", 
-                    tags=["cart"] ,
-                    dependencies=[Depends(verify_api_key)])
+router = APIRouter(
+    prefix="/api/cart",
+    tags=["cart"],
+    dependencies=[Depends(verify_api_key)]
+)
 cart_service = CartService()
 
 
@@ -76,7 +78,6 @@ async def update_item(user_id: str, item_id: str, body: UpdateItemRequest):
         raise HTTPException(status_code=404, detail=str(e))
     except Exception:
         raise HTTPException(status_code=500, detail="Error interno del servidor")
-
 
 
 @router.delete("/{user_id}")

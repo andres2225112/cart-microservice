@@ -5,7 +5,8 @@ from app.main import app
 
 
 @pytest.mark.asyncio
-async def test_clear_cart_returns_200():
+async def test_clear_cart_returns_200(monkeypatch):
+    monkeypatch.setenv("API_KEY", "test-key")
     with patch("app.controllers.cart_controller.cart_service") as mock_service:
         mock_service.clear_cart = AsyncMock(return_value={
             "user_id": "user_123",
@@ -15,7 +16,10 @@ async def test_clear_cart_returns_200():
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            response = await client.delete("/api/cart/user_123")
+            response = await client.delete(
+                "/api/cart/user_123",
+                headers={"X-API-Key": "test-key"}
+            )
 
         assert response.status_code == 200
         data = response.json()
@@ -24,7 +28,8 @@ async def test_clear_cart_returns_200():
 
 
 @pytest.mark.asyncio
-async def test_get_cart_returns_404_after_clear():
+async def test_get_cart_returns_404_after_clear(monkeypatch):
+    monkeypatch.setenv("API_KEY", "test-key")
     with patch("app.controllers.cart_controller.cart_service") as mock_service:
         mock_service.clear_cart = AsyncMock(return_value={
             "user_id": "user_123",
@@ -35,7 +40,13 @@ async def test_get_cart_returns_404_after_clear():
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            await client.delete("/api/cart/user_123")
-            response = await client.get("/api/cart/user_123")
+            await client.delete(
+                "/api/cart/user_123",
+                headers={"X-API-Key": "test-key"}
+            )
+            response = await client.get(
+                "/api/cart/user_123",
+                headers={"X-API-Key": "test-key"}
+            )
 
         assert response.status_code == 404
